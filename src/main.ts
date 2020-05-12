@@ -88,6 +88,7 @@ async function run(): Promise<void> {
       token: core.getInput('token'),
       projectNumber: Number(core.getInput('project-number')),
       projectName: core.getInput('project-name'),
+      projectType: core.getInput('project-type'),
       columnName: core.getInput('column-name'),
       repository: core.getInput('repository'),
       issueNumber: Number(core.getInput('issue-number'))
@@ -98,14 +99,33 @@ async function run(): Promise<void> {
 
     const octokit = new github.GitHub(inputs.token)
 
-    const {data: projects} = await octokit.projects.listForRepo({
-      owner: owner,
-      repo: repo
-    })
+    let projects;
+    switch (inputs.projectType) {
+      case "repo":
+        core.debug(`Using repository project ${inputs.projectName}`)
+
+        projects = await octokit.projects.listForRepo({
+          owner: owner,
+          repo: repo
+        })
+
+        break;
+      case "org":
+        core.debug(`Using organization project ${inputs.projectName}`)
+
+        projects = await octokit.projects.listForOrg({
+          org: owner
+        })
+
+        break;
+      default:
+        throw 'Unknown project type.'
+    }
+
     core.debug(`Projects: ${inspect(projects)}`)
 
     const project = getProject(
-      projects,
+      projects.data,
       inputs.projectNumber,
       inputs.projectName
     )

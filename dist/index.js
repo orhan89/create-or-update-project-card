@@ -2104,6 +2104,7 @@ function run() {
                 token: core.getInput('token'),
                 projectNumber: Number(core.getInput('project-number')),
                 projectName: core.getInput('project-name'),
+                projectType: core.getInput('project-type'),
                 columnName: core.getInput('column-name'),
                 repository: core.getInput('repository'),
                 issueNumber: Number(core.getInput('issue-number'))
@@ -2111,12 +2112,26 @@ function run() {
             core.debug(`Inputs: ${util_1.inspect(inputs)}`);
             const [owner, repo] = inputs.repository.split('/');
             const octokit = new github.GitHub(inputs.token);
-            const { data: projects } = yield octokit.projects.listForRepo({
-                owner: owner,
-                repo: repo
-            });
+            let projects;
+            switch (inputs.projectType) {
+                case "repo":
+                    core.debug(`Using repository project ${inputs.projectName}`);
+                    projects = yield octokit.projects.listForRepo({
+                        owner: owner,
+                        repo: repo
+                    });
+                    break;
+                case "org":
+                    core.debug(`Using organization project ${inputs.projectName}`);
+                    projects = yield octokit.projects.listForOrg({
+                        org: owner
+                    });
+                    break;
+                default:
+                    throw 'Unknown project type.';
+            }
             core.debug(`Projects: ${util_1.inspect(projects)}`);
-            const project = getProject(projects, inputs.projectNumber, inputs.projectName);
+            const project = getProject(projects.data, inputs.projectNumber, inputs.projectName);
             core.debug(`Project: ${util_1.inspect(project)}`);
             if (!project)
                 throw 'No project matching the supplied inputs found.';

@@ -13,6 +13,10 @@ inputs:
       The name of the project.
       Semi-required. Either `project-number` OR `project-name` must be supplied.
       Note that a project's name is not unique. The action will use the first matching project found.
+  project-type:
+    description: >
+      The type of the project (repo or org)
+    required: true
   column-name:
     description: 'The name of the column to add a card to, or move an existing card to.'
     required: true
